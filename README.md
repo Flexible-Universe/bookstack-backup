@@ -74,7 +74,7 @@ package main
 
 import (
 	"log"
-	"github.com/Flexible-Universe/bookstack-crawler/bookstack"
+	"github.com/Flexible-Universe/bookstack-crawler"
 )
 
 func main() {
