@@ -49,7 +49,7 @@ instances:
     schedule: "@daily"
     target:
       type: "book"    # or "shelve"
-      ids: ["1". "2"]
+      ids: ["1", "2"]
 ```
 
 | Field         | Description                                                |
