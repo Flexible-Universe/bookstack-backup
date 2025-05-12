@@ -123,6 +123,7 @@ func (c *Client) crawlBook(bookID string, shelveID ...string) error {
 	} else {
 		root = filepath.Join(c.inst.BackupPath, today, fmt.Sprintf("book_%s", bookID))
 	}
+	log.Printf("[%s] Creating root directory: %s", c.inst.Name, root)
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return fmt.Errorf("creating root folder: %w", err)
 	}
@@ -134,6 +135,7 @@ func (c *Client) crawlBook(bookID string, shelveID ...string) error {
 
 	for chapID, pages := range chapters {
 		chapDir := filepath.Join(root, fmt.Sprintf("Kapitel_%d", chapID))
+		log.Printf("[%s] Creating chapter directory: %s", c.inst.Name, chapDir)
 		if err := os.MkdirAll(chapDir, 0755); err != nil {
 			log.Printf("[%s] Creating chapter folder error: %v", c.inst.Name, err)
 			continue
