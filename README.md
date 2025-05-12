@@ -1,4 +1,4 @@
-# 📚 BookStack Crawler
+# 📚 BookStack Backup
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yourusername/bookstack-crawler.svg)](https://pkg.go.dev/github.com/yourusername/bookstack-crawler)
@@ -10,7 +10,7 @@
 ## ✨ Features
 
 - 🖋 Backup BookStack pages as Markdown files
-- 📂 Organize backups by books, chapters, and pages
+- 📂 Organize backups by shelves, books, chapters, and pages
 - ⏰ Cron-based automated crawling
 - 🔐 Secure API access using Token ID and Secret
 - 📚 Support for both **Book** and **Shelve** targets
@@ -20,7 +20,7 @@
 ## 📦 Installation
 
 ```bash
-go get github.com/Flexible-Universe/bookstack-crawler
+go get github.com/Flexible-Universe/bookstack-backup
 ```
 
 Install required dependencies:
@@ -74,7 +74,7 @@ package main
 
 import (
 	"log"
-	"github.com/Flexible-Universe/bookstack-crawler/pkg/bookstack"
+	"github.com/Flexible-Universe/bookstack-backup/pkg/bookstack"
 )
 
 func main() {
@@ -106,6 +106,6 @@ if err := client.Crawl(); err != nil {
 
 ## 📝 License
 
-This project is licensed under the [MIT License](https://github.com/Flexible-Universe/bookstack-crawler?tab=MIT-1-ov-file).
+This project is licensed under the [MIT License](https://github.com/Flexible-Universe/bookstack-backup?tab=MIT-1-ov-file).
 
 ---

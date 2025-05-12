@@ -3,7 +3,7 @@ package bookstack
 import (
 	"os"
 
-	"github.com/Flexible-Universe/bookstack-crawler/internal/bookstack"
+	"github.com/Flexible-Universe/bookstack-backup/internal/bookstack"
 	"gopkg.in/yaml.v2"
 )
 

@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Flexible-Universe/bookstack-crawler/internal/bookstack"
+	"github.com/Flexible-Universe/bookstack-backup/internal/bookstack"
 	"github.com/robfig/cron/v3"
 )
 

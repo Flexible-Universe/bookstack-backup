@@ -1,4 +1,4 @@
-module github.com/Flexible-Universe/bookstack-crawler
+module github.com/Flexible-Universe/bookstack-backup
 
 go 1.24.2
 
