@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Reference](https://pkg.go.dev/badge/github.com/yourusername/bookstack-crawler.svg)](https://pkg.go.dev/github.com/yourusername/bookstack-crawler)
 
-> A Go package to **crawl** and **backup** content from [BookStack](https://www.bookstackapp.com/) instances into **Markdown files** — organized, scheduled, and easily accessible.
+> A Go package to **backup** content from [BookStack](https://www.bookstackapp.com/) instances into **Markdown files** — organized, scheduled, and easily accessible.
 
 ---
 
@@ -13,7 +13,7 @@
 - 📂 Organize backups by shelves, books, chapters, and pages
 - ⏰ Cron-based automated crawling
 - 🔐 Secure API access using Token ID and Secret
-- 📚 Support for both **Book** and **Shelve** targets
+- 📚 Support for both **Book** and **Shelve** multiple targets
 
 ---
 
@@ -49,19 +49,19 @@ instances:
     schedule: "@daily"
     target:
       type: "book"    # or "shelve"
-      id: "1"
+      ids: ["1". "2"]
 ```
 
-| Field         | Description                                               |
+| Field         | Description                                                |
 | ------------- | ---------------------------------------------------------- |
 | `name`        | Human-readable name for the instance.                      |
-| `base_url`    | Base URL of your BookStack instance.                        |
-| `token_id`    | API Token ID for authentication.                            |
-| `token_secret`| API Token Secret for authentication.                        |
-| `backup_path` | Local path where backups will be stored.                    |
-| `schedule`    | Cron expression for automated backups (e.g., `@daily`).     |
-| `target.type` | `"book"` or `"shelve"`.                                      |
-| `target.id`   | ID of the book or shelve you want to backup.                 |
+| `base_url`    | Base URL of your BookStack instance.                       |
+| `token_id`    | API Token ID for authentication.                           |
+| `token_secret`| API Token Secret for authentication.                       |
+| `backup_path` | Local path where backups will be stored.                   |
+| `schedule`    | Cron expression for automated backups (e.g., `@daily` or `5 12 * * *`).    |
+| `target.type` | `"book"` or `"shelve"`.                                    |
+| `target.ids`  | IDs of the book or shelve you want to backup.              |
 
 ---
 
