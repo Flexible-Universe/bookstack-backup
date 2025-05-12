@@ -54,83 +54,88 @@ func (c *Client) Crawl() error {
 	}
 }
 
-// crawlBook fetches all pages, filters by book ID, and writes them as Markdown files.
-func (c *Client) crawlBook(bookID string) error {
-	log.Printf("[%s] Crawling book ID %s", c.inst.Name, bookID)
-	// fetch all pages
+// fetchBookPages retrieves all pages for a given book ID
+func (c *Client) fetchBookPages(bookID string) ([]PageMeta, error) {
 	pagesURL := fmt.Sprintf("%s/api/pages", c.inst.BaseURL)
 	body, err := c.httpGetWithAuth(pagesURL)
 	if err != nil {
-		return fmt.Errorf("fetching pages list: %w", err)
+		return nil, fmt.Errorf("fetching pages list: %w", err)
 	}
-	// parse JSON response
-	type PageMeta struct {
-		ID        int    `json:"id"`
-		Name      string `json:"name"`
-		BookID    int    `json:"book_id"`
-		ChapterID int    `json:"chapter_id"`
-	}
+
 	var list struct {
 		Data []PageMeta `json:"data"`
 	}
 	if err := json.Unmarshal(body, &list); err != nil {
-		return fmt.Errorf("parsing pages JSON: %w", err)
+		return nil, fmt.Errorf("parsing pages JSON: %w", err)
 	}
-	// filter pages belonging to this book
+
 	var filtered []PageMeta
 	for _, p := range list.Data {
 		if fmt.Sprint(p.BookID) == bookID {
 			filtered = append(filtered, p)
 		}
 	}
-	// setup backup directory
+	return filtered, nil
+}
+
+// processPage fetches and saves a single page
+func (c *Client) processPage(meta PageMeta, chapDir string, idx int) error {
+	detailURL := fmt.Sprintf("%s/api/pages/%d", c.inst.BaseURL, meta.ID)
+	detailBody, err := c.httpGetWithAuth(detailURL)
+	if err != nil {
+		return fmt.Errorf("fetching page %d: %w", meta.ID, err)
+	}
+
+	var detail PageDetail
+	if err := json.Unmarshal(detailBody, &detail); err != nil {
+		return fmt.Errorf("parsing page %d detail: %w", meta.ID, err)
+	}
+
+	mdContent := htmlToMarkdown(detail.HTML)
+	content := fmt.Sprintf("# %s\n\n%s", detail.Name, mdContent)
+	filename := fmt.Sprintf("%02d_%s.md", idx+1, sanitizeFilename(detail.Name))
+	path := filepath.Join(chapDir, filename)
+	return os.WriteFile(path, []byte(content), 0644)
+}
+
+// crawlBook fetches all pages, filters by book ID, and writes them as Markdown files.
+func (c *Client) crawlBook(bookID string) error {
+	log.Printf("[%s] Crawling book ID %s", c.inst.Name, bookID)
+
+	pages, err := c.fetchBookPages(bookID)
+	if err != nil {
+		return err
+	}
+
 	today := time.Now().Format("2006-01-02")
 	root := filepath.Join(c.inst.BackupPath, today, fmt.Sprintf("Book_%s", bookID))
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return fmt.Errorf("creating root folder: %w", err)
 	}
-	// group pages by chapter
+
 	chapters := make(map[int][]PageMeta)
-	for _, p := range filtered {
+	for _, p := range pages {
 		chapters[p.ChapterID] = append(chapters[p.ChapterID], p)
 	}
-	// iterate chapters and pages
+
 	for chapID, pages := range chapters {
 		chapDir := filepath.Join(root, fmt.Sprintf("Kapitel_%d", chapID))
 		if err := os.MkdirAll(chapDir, 0755); err != nil {
 			log.Printf("[%s] Creating chapter folder error: %v", c.inst.Name, err)
 			continue
 		}
+
 		sort.Slice(pages, func(i, j int) bool {
 			return strings.ToLower(pages[i].Name) < strings.ToLower(pages[j].Name)
 		})
+
 		for idx, meta := range pages {
-			detailURL := fmt.Sprintf("%s/api/pages/%d", c.inst.BaseURL, meta.ID)
-			detailBody, err := c.httpGetWithAuth(detailURL)
-			if err != nil {
-				log.Printf("[%s] Error fetching page %d: %v", c.inst.Name, meta.ID, err)
-				continue
-			}
-			// parse JSON page detail directly into PageDetail
-			type PageDetail struct {
-				ID   int    `json:"id"`
-				Name string `json:"name"`
-				HTML string `json:"html"`
-			}
-			var detail PageDetail
-			if err := json.Unmarshal(detailBody, &detail); err != nil {
-				log.Printf("[%s] Parsing page %d detail error: %v", c.inst.Name, meta.ID, err)
-				continue
-			}
-			mdContent := htmlToMarkdown(detail.HTML)
-			content := fmt.Sprintf("# %s\n\n%s", detail.Name, mdContent)
-			filename := fmt.Sprintf("%02d_%s.md", idx+1, sanitizeFilename(detail.Name))
-			path := filepath.Join(chapDir, filename)
-			if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-				log.Printf("[%s] Writing file %s error: %v", c.inst.Name, path, err)
+			if err := c.processPage(meta, chapDir, idx); err != nil {
+				log.Printf("[%s] Error processing page %d: %v", c.inst.Name, meta.ID, err)
 			}
 		}
 	}
+
 	log.Printf("[%s] Book crawl complete.", c.inst.Name)
 	return nil
 }

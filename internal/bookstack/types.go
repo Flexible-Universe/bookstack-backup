@@ -21,3 +21,18 @@ type TargetConfig struct {
 type Config struct {
 	Instances []InstanceConfig `yaml:"instances"`
 }
+
+// PageMeta represents the metadata for a BookStack page
+type PageMeta struct {
+	ID        int    `json:"id"`
+	Name      string `json:"name"`
+	BookID    int    `json:"book_id"`
+	ChapterID int    `json:"chapter_id"`
+}
+
+// PageDetail represents the full details of a BookStack page
+type PageDetail struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	HTML string `json:"html"`
+}
