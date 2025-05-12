@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/robfig/cron/v3"
 	"github.com/Flexible-Universe/bookstack-crawler/internal/bookstack"
+	"github.com/robfig/cron/v3"
 )
 
 // Scheduler configures and starts cron jobs for all instances in the config.
-func Scheduler(cfg Config) (*cron.Cron, error) {
+func Scheduler(cfg bookstack.Config) (*cron.Cron, error) {
 	sched := cron.New(cron.WithLocation(time.Local))
 	for _, inst := range cfg.Instances {
 		client := bookstack.NewClient(inst)

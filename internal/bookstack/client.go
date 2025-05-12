@@ -14,17 +14,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Flexible-Universe/bookstack-crawler/pkg/bookstack"
 	md "github.com/JohannesKaufmann/html-to-markdown"
 )
 
 // Client manages crawling operations for a BookStack instance.
 type Client struct {
-	inst bookstack.InstanceConfig
+	inst InstanceConfig
 }
 
 // NewClient creates a new Client for the given instance configuration.
-func NewClient(inst bookstack.InstanceConfig) *Client {
+func NewClient(inst InstanceConfig) *Client {
 	return &Client{inst: inst}
 }
 
