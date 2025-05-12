@@ -1,4 +1,3 @@
-// Package bookstack provides functionality to crawl pages from BookStack instances and backup them as Markdown files.
 package bookstack
 
 import (
@@ -11,44 +10,21 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
-	"gopkg.in/yaml.v2"
+	"github.com/Flexible-Universe/bookstack-crawler/pkg/bookstack"
 	md "github.com/JohannesKaufmann/html-to-markdown"
-	"github.com/robfig/cron/v3"
 )
-
-// InstanceConfig holds configuration for a single BookStack instance.
-type InstanceConfig struct {
-	Name        string       `yaml:"name"`
-	BaseURL     string       `yaml:"base_url"`
-	TokenID     string       `yaml:"token_id"`
-	TokenSecret string       `yaml:"token_secret"`
-	BackupPath  string       `yaml:"backup_path"`
-	Schedule    string       `yaml:"schedule"`
-	Target      TargetConfig `yaml:"target"`
-}
-
-// TargetConfig defines whether to crawl a book or a shelve.
-type TargetConfig struct {
-	Type string `yaml:"type"` // "book" or "shelve"
-	ID   string `yaml:"id"`
-}
-
-// Config holds the overall YAML configuration.
-type Config struct {
-	Instances []InstanceConfig `yaml:"instances"`
-}
 
 // Client manages crawling operations for a BookStack instance.
 type Client struct {
-	inst InstanceConfig
+	inst bookstack.InstanceConfig
 }
 
 // NewClient creates a new Client for the given instance configuration.
-func NewClient(inst InstanceConfig) *Client {
+func NewClient(inst bookstack.InstanceConfig) *Client {
 	return &Client{inst: inst}
 }
 
@@ -115,7 +91,9 @@ func (c *Client) crawlBook(bookID string) error {
 		BookID    int    `json:"book_id"`
 		ChapterID int    `json:"chapter_id"`
 	}
-	var list struct { Data []PageMeta `json:"data"` }
+	var list struct {
+		Data []PageMeta `json:"data"`
+	}
 	if err := json.Unmarshal(body, &list); err != nil {
 		return fmt.Errorf("parsing pages JSON: %w", err)
 	}
@@ -187,8 +165,12 @@ func (c *Client) crawlShelve(shelveID string) error {
 		return fmt.Errorf("fetching shelve: %w", err)
 	}
 	// parse JSON response to extract books
-	type BookEntry struct { ID int `json:"id"` }
-	var shelf struct { Books []BookEntry `json:"books"` }
+	type BookEntry struct {
+		ID int `json:"id"`
+	}
+	var shelf struct {
+		Books []BookEntry `json:"books"`
+	}
 	if err := json.Unmarshal(body, &shelf); err != nil {
 		return fmt.Errorf("parsing shelve JSON: %w", err)
 	}
@@ -200,37 +182,4 @@ func (c *Client) crawlShelve(shelveID string) error {
 	}
 	log.Printf("[%s] Shelve crawl complete.", c.inst.Name)
 	return nil
-}
-
-// Scheduler configures and starts cron jobs for all instances in the config.
-func Scheduler(cfg Config) (*cron.Cron, error) {
-	sched := cron.New(cron.WithLocation(time.Local))
-	for _, inst := range cfg.Instances {
-		client := NewClient(inst)
-		inst := inst
-		if _, err := sched.AddFunc(inst.Schedule, func() {
-			if err := client.Crawl(); err != nil {
-				log.Printf("[%s] Crawl error: %v", inst.Name, err)
-			}
-		}); err != nil {
-			return nil, fmt.Errorf("scheduling %s: %w", inst.Name, err)
-		}
-	}
-	sched.Start()
-	return sched, nil
-}
-
-// LoadConfig reads and parses a YAML config file.
-func LoadConfig(path string) (Config, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return Config{}, err
-	}
-	defer file.Close()
-
-	var cfg Config
-	if err := yaml.NewDecoder(file).Decode(&cfg); err != nil {
-		return Config{}, err
-	}
-	return cfg, nil
 }
