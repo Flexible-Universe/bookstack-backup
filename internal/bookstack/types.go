@@ -13,8 +13,8 @@ type InstanceConfig struct {
 
 // TargetConfig defines whether to crawl a book or a shelve.
 type TargetConfig struct {
-	Type string `yaml:"type"` // "book" or "shelve"
-	ID   string `yaml:"id"`
+	Type string   `yaml:"type"` // "book" or "shelve"
+	IDs  []string `yaml:"ids"`
 }
 
 // Config holds the overall YAML configuration.

@@ -46,12 +46,21 @@ func htmlToMarkdown(input string) string {
 func (c *Client) Crawl() error {
 	switch c.inst.Target.Type {
 	case "book":
-		return c.crawlBook(c.inst.Target.ID)
+		for _, id := range c.inst.Target.IDs {
+			if err := c.crawlBook(id); err != nil {
+				log.Printf("[%s] Error crawling book ID %s: %v", c.inst.Name, id, err)
+			}
+		}
 	case "shelve":
-		return c.crawlShelve(c.inst.Target.ID)
+		for _, id := range c.inst.Target.IDs {
+			if err := c.crawlShelve(id); err != nil {
+				log.Printf("[%s] Error crawling shelve ID %s: %v", c.inst.Name, id, err)
+			}
+		}
 	default:
 		return fmt.Errorf("unsupported target type: %s", c.inst.Target.Type)
 	}
+	return nil
 }
 
 // fetchBookPages retrieves all pages for a given book ID
@@ -99,7 +108,7 @@ func (c *Client) processPage(meta PageMeta, chapDir string, idx int) error {
 }
 
 // crawlBook fetches all pages, filters by book ID, and writes them as Markdown files.
-func (c *Client) crawlBook(bookID string) error {
+func (c *Client) crawlBook(bookID string, shelveID ...string) error {
 	log.Printf("[%s] Crawling book ID %s", c.inst.Name, bookID)
 
 	pages, err := c.fetchBookPages(bookID)
@@ -108,7 +117,12 @@ func (c *Client) crawlBook(bookID string) error {
 	}
 
 	today := time.Now().Format("2006-01-02")
-	root := filepath.Join(c.inst.BackupPath, today, fmt.Sprintf("Book_%s", bookID))
+	var root string
+	if len(shelveID) > 0 {
+		root = filepath.Join(c.inst.BackupPath, today, fmt.Sprintf("shelves_%s", shelveID[0]), fmt.Sprintf("book_%s", bookID))
+	} else {
+		root = filepath.Join(c.inst.BackupPath, today, fmt.Sprintf("book_%s", bookID))
+	}
 	if err := os.MkdirAll(root, 0755); err != nil {
 		return fmt.Errorf("creating root folder: %w", err)
 	}
@@ -160,7 +174,7 @@ func (c *Client) crawlShelve(shelveID string) error {
 	}
 	for _, b := range shelf.Books {
 		bookID := strconv.Itoa(b.ID)
-		if err := c.crawlBook(bookID); err != nil {
+		if err := c.crawlBook(bookID, shelveID); err != nil {
 			log.Printf("[%s] Error crawling book %s: %v", c.inst.Name, bookID, err)
 		}
 	}
